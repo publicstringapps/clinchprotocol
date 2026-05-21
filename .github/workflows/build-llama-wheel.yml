@@ -44,16 +44,23 @@ jobs:
         with:
           node-version: "20"
 
-      - name: Build node-llama-cpp binary
+      - name: Install build tools
         run: |
-          npm install node-llama-cpp
-          npx node-llama-cpp download
+          sudo apt-get update
+          sudo apt-get install -y gcc g++ cmake make
+
+      - name: Install node-llama-cpp
+        run: npm install node-llama-cpp
+
+      - name: Download llama.cpp source and build
+        run: |
+          npx node-llama-cpp source download
+          npx node-llama-cpp source build --no-gpu
 
       - name: Pack binary
         run: |
           tar -czf node-llama-linux-x64.tar.gz \
-            node_modules/node-llama-cpp/build \
-            node_modules/node-llama-cpp/bins
+            node_modules/node-llama-cpp/build
 
       - name: Upload node artifact
         uses: actions/upload-artifact@v4
@@ -71,9 +78,6 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: ./artifacts
-
-      - name: Show artifacts
-        run: find ./artifacts -type f
 
       - name: Publish to GitHub Release
         uses: softprops/action-gh-release@v2
