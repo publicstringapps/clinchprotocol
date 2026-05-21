@@ -52,15 +52,19 @@ jobs:
       - name: Install node-llama-cpp
         run: npm install node-llama-cpp
 
-      - name: Download llama.cpp source and build
+      - name: Download and build llama.cpp source
         run: |
           npx node-llama-cpp source download
           npx node-llama-cpp source build --no-gpu
 
+      # Find where the binary actually landed before packing
+      - name: Find built binary
+        run: find . -name "*.node" -o -name "llama-addon*" 2>/dev/null | grep -v ".git"
+
       - name: Pack binary
         run: |
           tar -czf node-llama-linux-x64.tar.gz \
-            node_modules/node-llama-cpp/build
+            $(find . -path "./.git" -prune -o -name "*.node" -print)
 
       - name: Upload node artifact
         uses: actions/upload-artifact@v4
