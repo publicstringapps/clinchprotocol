@@ -171,7 +171,7 @@ const seller = new ClinchSeller({ privateKeyHex: process.env.SELLER_PRIVATE_KEY 
 
 await seller.registerEndpoint({
   agent_id:        'mystore.anp',
-  endpoint:        'https://api.mystore.com/anp/v1',
+  endpoint:        'https://api.mystore.com', //use your root web address
   supported_modes: ['ANP/A', 'ANP/C'],
   categories:      ['electronics'],
   capabilities:    ['price_flex', 'bundle']
