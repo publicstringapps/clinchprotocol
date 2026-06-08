@@ -1,13 +1,15 @@
+Here is the updated and aligned main repository `README.md` [1, 2]. 
 
-<div align="center">
 
 # ⚡ Clinch Protocol
 
 **The Zero-Trust Autonomous Bargaining Layer for the Agentic Web.**
 
-[![Core SDK](https://img.shields.io/badge/clinch--core-v0.1.0-blue)](https://github.com/publicstringapps/clinch-core)
-[![CLI Client](https://img.shields.io/badge/clinch--cli-v0.1.0-green)](https://github.com/publicstringapps/clinch-cli)
-[![Protocol](https://img.shields.io/badge/ANP-v0.1--draft-orange)]()
+<div align="center">
+
+[![Core SDK](https://img.shields.io/badge/clinch--core-v0.2.1-blue)](https://github.com/publicstringapps/clinch-core)
+[![CLI Client](https://img.shields.io/badge/clinch--cli-v0.2.1-green)](https://github.com/publicstringapps/clinch-cli)
+[![Protocol](https://img.shields.io/badge/ANP-v0.2.1--draft-orange)]()
 [![License](https://img.shields.io/badge/License-MIT-purple)]()
 
 [Core SDK](https://github.com/publicstringapps/clinch-core) · [CLI Client](https://github.com/publicstringapps/clinch-cli) · [Homepage](https://clinchprotocol.web.app) · [Support](mailto:publicstring.care@gmail.com)
@@ -122,44 +124,35 @@ Before any session opens, the buyer's agent solves a Proof-of-Work puzzle issued
 The programmatic engine. Drop it into any Node.js or browser environment.
 
 - **`ClinchCore`** — buyer agent. Handles PoW, Ed25519 ephemeral session signing, WebSocket connection with exponential backoff reconnect, parallel session management, callback queue, and sandbox auto-negotiation via dynamically imported local GGUF models.
-- **`ClinchSeller`** — server-side seller agent. Loads a permanent Ed25519 private key (no JWTs, no expiry), signs endpoint updates cryptographically, and exposes `verifyBuyerSignature` for validating incoming session messages.
-- **`buildAgentPrompt()`** — generates a universally formatted negotiation system prompt from live session state, usable with any external LLM (Claude, Gemini, GPT-4o).
-- **Blind Key Pass** — credential vault that silently injects API keys at the transport layer of handshakes, completely outside the AI context window.
+- **`ClinchSeller`** — server-side seller agent. Loads a permanent Ed25519 private key (no JWTs, no expiry), signs endpoint updates cryptographically, and exposes `signAsSeller` for co-signing verified buyer agreement artifacts.
+- **`buildAgentPrompt()`** — generates a universally formatted negotiation system prompt from live session state, usable with any external LLM (Claude, Gemini, GPT-4o, Ollama/Llama3).
+- **Blind Key Pass** *(Constructor configured)* — credential vault that silently injects API keys at the transport layer of handshakes, completely outside the AI context window.
 
 ### [`clinch-cli`](https://github.com/publicstringapps/clinch-cli) — The Client
 
 The reference buyer agent and developer tool.
 
-- **Agent Q Wizard** — conversational intent parser running a local quantized model. Turns *"I need a blender under $60"* into a strict, signed JSON constraint vector.
-- **Parallel Race** — opens sessions with multiple sellers simultaneously, returns the best convergence.
-- **Sequential Squeeze** — feeds the closed price of one session as the ceiling for the next. Drives the market down systematically.
-- **Local Vault** — uses machine-bound encryption for stored sessions, deal artifacts, and API keys. Nothing sensitive ever leaves your device unencrypted.
-
-### Clinch Registry — The Trust Layer
-
-The DNS of Agents. Sellers publish signed records. The registry crawls, re-signs, and ranks them by behavioral metrics — stall rate, acceptance rate, callback abuse, record change frequency. A seller cannot game their score by updating their record; they can only improve it by behaving well across real sessions.
-
-The registry issues one-time callback tokens on buyer `EXIT`. The seller gets exactly one chance to re-engage, routed through the registry's private queue. The buyer's endpoint is never revealed. Second attempt: `410 Gone`, abuse logged, rank penalized.
+- **Constraint Parser** — parses plain natural language via a local Ollama instance running `llama3` into a strict, signed JSON constraint vector.
+- **Background Daemon** — runs `clinch start` to hold active websocket channels open, stream real-time events, and execute callbacks or webhooks.
+- **Local Vault** — uses AES-256-GCM encryption for storing your permanent identity keys, session states, and credentials locally in `~/.clinch/`.
 
 ---
 
 ## 🚀 Quickstart
 
 ```bash
-npm install -g clinch-cli
+npm install -g agent-clinch
 clinch init
 
 # Search for sellers
-clinch query "domain_name"
+clinch discover "domain_name"
 
-# Negotiate — ANP address format: MODE.domain.anp
-clinch negotiate ANP/A.cloudflare-domains.anp --item "clinchprotocol.io" --budget 800
+# Negotiate
+clinch negotiate "domain clinchprotocol.io under 800 dollars" --target cloudflare-domains.anp
 
-# Run fully autonomous (local Agent Q handles all turns)
-clinch negotiate ANP/A.cloudflare-domains.anp --item "clinchprotocol.io" --budget 800 --auto
-
-# View deals and verify artifact chain
-clinch sessions
+# View active and completed deals
+clinch status
+clinch deals
 ```
 
 **Build a seller agent in under 10 minutes:**
@@ -169,16 +162,16 @@ const { ClinchSeller } = require('clinch-core');
 
 const seller = new ClinchSeller({ privateKeyHex: process.env.SELLER_PRIVATE_KEY });
 
-await seller.registerEndpoint({
-  agent_id:        'mystore.anp',
-  endpoint:        'https://api.mystore.com', //use your root web address
-  supported_modes: ['ANP/A', 'ANP/C'],
-  categories:      ['electronics'],
-  capabilities:    ['price_flex', 'bundle']
-});
+await seller.registerNode(
+  'mystore.anp',
+  'https://api.mystore.com/anp/v1',
+  ['electronics'],
+  ['price_flex', 'bundle'],
+  { supported_modes: ['ANP/C'] }
+);
 
-// Your Express routes handle /anp/v1/handshake and /anp/v1/counter
-// seller.verifyBuyerSignature() validates incoming session messages
+// Your Express routes handle /anp/v1/handshake and /anp/v1/sign_request
+// seller.signAsSeller() validates the co-signatures of incoming deal artifacts
 ```
 
 Your seller is now discoverable by every Clinch buyer agent on the network.
@@ -194,7 +187,7 @@ The Clinch Protocol is an open, evolving standard. These are the active design a
 - [ ] **ONNX / WASM Model Export** — compile the edge negotiation model for zero-dependency browser execution.
 - [ ] **Escrow/Commit Mediation:** Implement a standardized cryptographic escrow contract for V2 when sellers go offline between `ACCEPT` and `COMMIT` states.
 - [ ] **Multi-Item Basket Handshakes:** Design protocol schemas to handle multi-item baskets (`ANP-BASKET/0.1`) in a single negotiation session with partial acceptance semantics.
-- [ ] **Ginger Calendar Broker:** Reference Node.js implementation of a P2P calendar coordinating seller node.
+- [x] **Ginger Calendar Broker:** Reference Node.js implementation of a P2P calendar coordinating seller node.
 - [ ] **Local-Only Reputation Incentives:** Design privacy-preserving proof systems to reward local-only buyer agents who securely report session metrics to the Registry.
 - [ ] **Rideshare Driver Daemon:** Open-source a reference Node.js implementation for a dynamic ride-hailing seller node.
 
@@ -219,9 +212,8 @@ The network is only as strong as the agents on it.
 
 <div align="center">
 
-**Clinch Protocol** · ANP v0.1 Draft · MIT License
+**Clinch Protocol** · ANP v0.2.1 Draft · MIT License
 
 *Stop clicking. Start negotiating.*
 
 </div>
-
