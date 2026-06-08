@@ -1,5 +1,9 @@
 <div align="center">
-  ## ⚡ Clinch Protocol
+
+# ⚡ Clinch Protocol
+
+</div>
+<div align="center">
 
 **The Zero-Trust Autonomous Bargaining Layer for the Agentic Web.**
 
