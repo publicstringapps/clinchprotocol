@@ -1,8 +1,8 @@
-# ⚡ Clinch Protocol
+<div align="center">
+  # ⚡ Clinch Protocol
 
 **The Zero-Trust Autonomous Bargaining Layer for the Agentic Web.**
 
-<div align="center">
 
 [![Core SDK](https://img.shields.io/badge/clinch--core-v0.2.1-blue)](https://github.com/publicstringapps/clinch-core)
 [![CLI Client](https://img.shields.io/badge/clinch--cli-v0.2.1-green)](https://github.com/publicstringapps/clinch-cli)
