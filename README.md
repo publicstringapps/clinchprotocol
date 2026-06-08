@@ -1,6 +1,3 @@
-Here is the updated and aligned main repository `README.md` [1, 2]. 
-
-
 # ⚡ Clinch Protocol
 
 **The Zero-Trust Autonomous Bargaining Layer for the Agentic Web.**
